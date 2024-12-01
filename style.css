@@ -133,7 +133,7 @@ footer {
 
 
 
-#radioToggle {
+ #radioToggle {
     margin-left: 10px;
     padding: 10px 20px;
     background-color: #501d18; 
@@ -144,8 +144,14 @@ footer {
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin-bottom: 20px;
+    transition: transform 0.1s ease;
+
+    
 }
 
+#radioToggle:active {
+    transform: scale(0.95); /* При натисканні кнопка буде трохи зменшуватися */
+}
 
 
 
@@ -158,6 +164,7 @@ footer {
     border-radius: 30px;
     margin-top: 150px;
     margin-left: -150px;
+    
 
 
     p{
@@ -165,6 +172,7 @@ footer {
         width: 590px;
         text-align: center;
         color: black;
+
     }
 }
 
@@ -191,6 +199,7 @@ footer {
     right: 0;
 }
 
+/* Стилі для кнопки відкриття модального вікна */
 .open-btn {
     padding: 10px 20px;
     font-size: 16px;
@@ -199,17 +208,19 @@ footer {
     border-radius: 10px;
 }
 
+/* Стилі для модального вікна */
 .modal {
     position: fixed;
     top: 50%;
     right: -350px; /* Початкове положення з правої сторони */
     transform: translateY(-50%);
     width: 300px;
-    height: 200px;
     background-color: rgba(0, 0, 0, 0.5);
     transition: right 0.5s ease-in-out;
+    z-index: 9999; /* Щоб модальне вікно було поверх інших елементів */
 }
 
+/* Стилі для вмісту модального вікна */
 .modal-content {
     background-color: white;
     width: 100%;
@@ -220,6 +231,7 @@ footer {
     flex-direction: column;
     justify-content: space-between;
 }
+
 
 .close-btn {
     position: absolute;
@@ -250,3 +262,4 @@ footer {
     margin-left: 1000px;
     margin-top: -130px;
   }
+

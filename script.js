@@ -1,4 +1,5 @@
 const frequencyBar = document.getElementById('currentFrequency');
+const frequencyText = document.getElementById('frequencyText');
 const dial = document.getElementById('dial');
 const audioControl = document.getElementById('audio_F');
 const audioPlayer = document.getElementById('audioPlayer');
@@ -7,10 +8,17 @@ const radioToggleButton = document.getElementById('radioToggle');
 let frequency = 87.5;
 const minFrequency = 87.5;
 const maxFrequency = 108.0;
-const step = 0.05; // Зменшений крок для плавного обертання
+const step = 0.1;
 
 let isMuted = false;
-let volume = 0; // Початковий рівень гучності — 0 (мутовано)
+let volume = 0.0;
+
+let angleDial = 0;
+const dialAngleStep = 5;
+
+let angleVolume = 0; // Початковий кут для гучності
+const volumeMinAngle = 0;
+const volumeMaxAngle = 360;
 
 const stations = {
     90.0: './media_on_audio/sadsvit-kaseta-(meloua.com).mp3',
@@ -23,18 +31,10 @@ const stations = {
 
 const whiteNoise = './media_on_audio/white-noise-8117.mp3';
 
-let angleDial = 0; 
-let angleAudioControl = 0;
-
-const maxAngle = 360; 
-const minAngle = 0; 
-const dialAngleStep = 7; // Плавне обертання для частоти
-const audioAngleStep = 5; // Крок крутіння для гучності
-
 function updateFrequencyBar() {
     const percent = ((frequency - minFrequency) / (maxFrequency - minFrequency)) * 100;
     frequencyBar.style.left = `${percent}%`;
-    frequencyText.textContent = `${frequency.toFixed(1)} МГц`;
+    frequencyText.textContent = `${frequency.toFixed(1)} МГц`; // Без тексту "Частота"
 
     const roundedFrequency = parseFloat(frequency.toFixed(1));
     const currentStation = stations[roundedFrequency];
@@ -59,13 +59,34 @@ function updateVolume() {
 }
 
 function rotateElement(element, angle) {
-    if (angle >= maxAngle) angle = maxAngle;
-    if (angle <= minAngle) angle = minAngle;
     element.style.transform = `rotate(${angle}deg)`;
+}
 
-    const indicator = element.querySelector('::before');
-    if (indicator) {
-        indicator.style.transform = `rotate(${angle}deg)`;
+function onDialRotate(event) {
+    const direction = event.deltaY > 0 ? 1 : -1;
+
+    angleDial += direction * dialAngleStep;
+    rotateElement(dial, angleDial);
+
+    frequency += direction * step;
+    frequency = Math.min(maxFrequency, Math.max(minFrequency, frequency));
+    updateFrequencyBar();
+}
+
+function onVolumeRotate(event) {
+    const direction = event.deltaY > 0 ? 1 : -1;
+
+    const newAngle = angleVolume + direction * dialAngleStep;
+
+    // Блокування обертання за межі 90-359 градусів
+    if (newAngle >= 0 && newAngle <= 360) {
+        angleVolume = newAngle;
+        rotateElement(audioControl, angleVolume);
+
+        // Обчислення гучності на основі кута
+        const normalizedAngle = angleVolume - volumeMinAngle; // Відносний кут (90 -> 0)
+        volume = normalizedAngle / (volumeMaxAngle - volumeMinAngle);
+        updateVolume();
     }
 }
 
@@ -78,53 +99,22 @@ dial.addEventListener('mouseleave', () => {
 });
 
 audioControl.addEventListener('mouseenter', () => {
-    window.addEventListener('wheel', onAudioControlRotate);
+    window.addEventListener('wheel', onVolumeRotate);
 });
 
 audioControl.addEventListener('mouseleave', () => {
-    window.removeEventListener('wheel', onAudioControlRotate);
+    window.removeEventListener('wheel', onVolumeRotate);
 });
-
-function onDialRotate(event) {
-    const direction = event.deltaY > 0 ? 1 : -1;
-
-    angleDial += direction * dialAngleStep;
-    if (angleDial >= maxAngle) angleDial = maxAngle;
-    if (angleDial <= minAngle) angleDial = minAngle;
-    rotateElement(dial, angleDial);
-
-    frequency += direction * step;
-    frequency = Math.min(maxFrequency, Math.max(minFrequency, frequency)); // Частота обмежена лише максимумом та мінімумом
-    updateFrequencyBar();
-}
-
-function onAudioControlRotate(event) {
-    const direction = event.deltaY > 0 ? 1 : -1;
-    angleAudioControl += direction * audioAngleStep;
-
-    if (angleAudioControl >= maxAngle) angleAudioControl = maxAngle;
-    if (angleAudioControl <= minAngle) angleAudioControl = minAngle;
-
-    rotateElement(audioControl, angleAudioControl);
-
-    volume = angleAudioControl / maxAngle;
-    volume = Math.min(1, Math.max(0, volume));
-    updateVolume();
-}
 
 radioToggleButton.addEventListener('click', () => {
     isMuted = !isMuted;
-    radioToggleButton.textContent = isMuted ? '' : '';
     radioToggleButton.style.backgroundColor = isMuted ? '#501d18' : 'rgb(238, 31, 31)';
     audioPlayer.volume = isMuted ? 0 : volume;
 });
 
-// Оновлюємо частоту та гучність при завантаженні сторінки
 updateFrequencyBar();
 updateVolume();
 
-// Початковий кут для крутилки гучності, що відповідає нулю гучності
-rotateElement(audioControl, 0);
 
 
 
